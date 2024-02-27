@@ -1,0 +1,151 @@
+Imports System.IO
+Imports System.Windows.Forms.VisualStyles.VisualStyleElement
+
+Public Class Form1
+    'Declaración de variables
+    Dim ruta As String = "E:\UsuariosProyecto\"
+    Dim archivo As String = "Usuarios.txt"
+
+
+
+    Private Sub BtnCrearTxt_Click(sender As Object, e As EventArgs) Handles BtnCrearTxt.Click
+        Dim text As FileStream
+        If File.Exists(Path.Combine(ruta, archivo)) = True Then 'Verifica que exista un archivo, si lo hay avisa que ya existe uno, de lo contrario lo crea
+            MsgBox("El archivo ya existe")
+        Else
+            Try
+                'Verifica si el archivo ya existe en la ruta especificada
+                If File.Exists(ruta) Then
+                    'Si existe, se crea un archivo nuevo
+                    text = File.Create(ruta & archivo)
+                    text.Close()
+                    MsgBox("Se creo el archivo correctamente")
+                Else
+                    'Si no existe, crea la carpeta y luego el archivo
+                    Directory.CreateDirectory(ruta)
+
+                    text = File.Create(ruta & archivo)
+                    text.Close()
+                    MsgBox("Se creo el archivo correctamente")
+                End If
+            Catch ex As Exception
+
+            End Try
+        End If
+    End Sub
+
+    'Crea el evento sobreescribir en el archivo texto
+    Private Sub BtnSobreescribir_Click(sender As Object, e As EventArgs) Handles BtnSobreescribir.Click
+        If String.IsNullOrEmpty(TxtNombres.Text) And String.IsNullOrEmpty(TxtApellidos.Text) Then 'Si no hay información en los textbox, envía un mensaje de error
+            MsgBox("Debe de ingresar información en los textbox")
+        Else
+            Sobreescribir()
+        End If
+    End Sub
+
+    Private Sub Sobreescribir()
+        If File.Exists(Path.Combine(ruta, archivo)) = True Then 'Este código permite buscar el archivo exacto en la carpeta exacta, para así comprobar que haya uno
+            Try
+                Using escribir As New StreamWriter(Path.Combine(ruta, archivo), False) 'Permite agrear la información escrita en el listbox
+                    escribir.WriteLine(TxtNombres.Text + " " + TxtApellidos.Text)
+                End Using
+
+                MsgBox("Se agregó el nombre correctamente")
+                TxtNombres.Clear()
+                TxtApellidos.Clear()
+
+                ' Llama a la función para leer el archivo y mostrar su contenido
+                LeerArchivo()
+            Catch ex As Exception
+                MsgBox("Hubo un error al ejecutar el programa")
+            End Try
+        Else
+            MsgBox("Debe de crear un nuevo archivo")
+        End If
+    End Sub
+
+    'Funcion para leer el contenido del archivo texto
+    Sub LeerArchivo()
+        'Creacion de un archivo StreamReader para leer el archivo
+        Dim leer As New StreamReader(ruta & archivo)
+
+        ' Limpia la lista ListBox1 para mostrar un nuevo contenido
+        ListBoxClientes.Items.Clear()
+
+        Try
+            'Lee el archivo linea por linea hasta el final
+            While leer.Peek <> -1
+                Dim line As String = leer.ReadLine()
+                If String.IsNullOrEmpty(line) Then
+                    Continue While 'Si la linea esta vacia continua con la sigueinte linea
+                End If
+                ListBoxClientes.Items.Add(line) ' Agrega la línea a ListBox1 para mostrarla al usuario
+            End While
+
+            leer.Close() 'Cierra el archivo despues de leerlo
+
+            Label1.Text = ListBoxClientes.Items.Count
+        Catch ex As Exception
+
+        End Try
+    End Sub
+
+    Private Sub BtnGuardartodo_Click(sender As Object, e As EventArgs) Handles BtnGuardartodo.Click
+        If String.IsNullOrEmpty(TxtNombres.Text) And String.IsNullOrEmpty(TxtApellidos.Text) Then 'Comprueba que hay información en los textbox antes de permitir añadir información
+            MsgBox("Debe de ingresar información en los textbox")
+        Else
+            GuardarArchivo()
+        End If
+
+    End Sub
+
+    Private Sub GuardarArchivo()
+        If File.Exists(Path.Combine(ruta, archivo)) = True Then 'Este código permite buscar el archivo exacto en la carpeta exacta, para así comprobar que haya uno
+            Try
+                Using escribir As New StreamWriter(Path.Combine(ruta, archivo), True) ' True para agregar al final
+                    escribir.WriteLine(TxtNombres.Text + " " + TxtApellidos.Text)
+                End Using
+
+                MsgBox("Se guardó la información correctamente")
+                TxtNombres.Clear()
+                TxtApellidos.Clear()
+
+                ' Llama a la función para leer el archivo y mostrar su contenido
+                LeerArchivo()
+            Catch ex As Exception
+                MsgBox("Hubo un error al guardar la información")
+            End Try
+        Else
+            MsgBox("Debe de crear un nuevo archivo")
+        End If
+    End Sub
+    'Maneja el contenido de eliminacio en el archivo texto
+    Private Sub Eliminartxt_Click(sender As Object, e As EventArgs) Handles BtnEliminar.Click
+        Try
+            If File.Exists(ruta & archivo) Then
+                File.Delete(ruta & archivo)
+                MsgBox("Archivo eliminado con exito.")
+            Else
+                MsgBox("El archivo no existe.")
+            End If
+        Catch ex As Exception
+            MsgBox("Hubo un error al ejecutar el programa")
+        End Try
+    End Sub
+
+    'Este tipo de código permite crear las validaciones necesarias por medio del KeyPress
+    Private Sub TxtNombres_KeyPress(sender As Object, e As KeyPressEventArgs) Handles TxtNombres.KeyPress
+        If Not Char.IsLetter(e.KeyChar) And Not Char.IsControl(e.KeyChar) Then 'En este código sólo se admiten letras y la tecla para borrar
+            e.Handled = True
+            MsgBox("Sólo se admiten letras")
+        End If
+    End Sub
+
+    'Se repite lo mismo qeu la anterior validación, sólo que para el siguiente textbox
+    Private Sub TxtApellidos_KeyPress(sender As Object, e As KeyPressEventArgs) Handles TxtApellidos.KeyPress
+        If Not Char.IsLetter(e.KeyChar) And Not Char.IsControl(e.KeyChar) Then
+            e.Handled = True
+            MsgBox("Sólo se admiten letras")
+        End If
+    End Sub
+End Class
